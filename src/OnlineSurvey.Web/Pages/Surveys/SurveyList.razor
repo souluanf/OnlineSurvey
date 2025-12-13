@@ -1,0 +1,269 @@
+@page "/surveys"
+@using OnlineSurvey.Web.Models
+@using OnlineSurvey.Web.Services
+@inject ISurveyApiService SurveyService
+
+<PageTitle>Pesquisas</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">Pesquisas</h1>
+    <a href="/surveys/create" class="btn btn-success">
+        + Criar Nova Pesquisa
+    </a>
+</div>
+
+<ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+        <button class="nav-link @(_activeTab == "active" ? "active" : "")" @onclick='() => ChangeTab("active")'>
+            Ativas (@_activeSurveys.Count())
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link @(_activeTab == "draft" ? "active" : "")" @onclick='() => ChangeTab("draft")'>
+            Rascunhos (@_draftSurveys.Count())
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link @(_activeTab == "closed" ? "active" : "")" @onclick='() => ChangeTab("closed")'>
+            Encerradas (@_closedSurveys.Count())
+        </button>
+    </li>
+</ul>
+
+@if (_loading)
+{
+    <p><em>Carregando...</em></p>
+}
+else
+{
+    @if (_activeTab == "active")
+    {
+        @if (!_activeSurveys.Any())
+        {
+            <div class="alert alert-info">
+                Nenhuma pesquisa ativa no momento.
+            </div>
+        }
+        else
+        {
+            <div class="row">
+                @foreach (var survey in _activeSurveys)
+                {
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card h-100 border-success">
+                            <div class="card-header bg-success text-white">
+                                <span class="badge bg-light text-success">Ativa</span>
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">@survey.Title</h5>
+                                @if (!string.IsNullOrEmpty(survey.Description))
+                                {
+                                    <p class="card-text">@survey.Description</p>
+                                }
+                                <p class="text-muted small">
+                                    @survey.QuestionCount perguntas |
+                                    @survey.ResponseCount respostas
+                                </p>
+                            </div>
+                            <div class="card-footer d-flex gap-1 flex-wrap">
+                                <a href="/surveys/@survey.Id" class="btn btn-primary btn-sm">Responder</a>
+                                <a href="/surveys/@survey.Id/results" class="btn btn-outline-secondary btn-sm">Resultados</a>
+                                <button class="btn btn-outline-warning btn-sm" @onclick="() => CloseSurvey(survey.Id)">Encerrar</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+    else if (_activeTab == "draft")
+    {
+        @if (!_draftSurveys.Any())
+        {
+            <div class="alert alert-info">
+                Nenhum rascunho. <a href="/surveys/create">Crie uma nova pesquisa</a>.
+            </div>
+        }
+        else
+        {
+            <div class="row">
+                @foreach (var survey in _draftSurveys)
+                {
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card h-100 border-warning">
+                            <div class="card-header bg-warning">
+                                <span class="badge bg-dark">Rascunho</span>
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">@survey.Title</h5>
+                                @if (!string.IsNullOrEmpty(survey.Description))
+                                {
+                                    <p class="card-text">@survey.Description</p>
+                                }
+                                <p class="text-muted small">
+                                    @survey.QuestionCount perguntas
+                                </p>
+                            </div>
+                            <div class="card-footer d-flex gap-1 flex-wrap">
+                                <a href="/surveys/@survey.Id/edit" class="btn btn-primary btn-sm">Editar</a>
+                                <button class="btn btn-success btn-sm" @onclick="() => ActivateSurvey(survey.Id)" disabled="@_activating">
+                                    @if (_activatingId == survey.Id)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-1"></span>
+                                    }
+                                    Ativar
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteSurvey(survey.Id)">
+                                    Excluir
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+    else if (_activeTab == "closed")
+    {
+        @if (!_closedSurveys.Any())
+        {
+            <div class="alert alert-info">
+                Nenhuma pesquisa encerrada.
+            </div>
+        }
+        else
+        {
+            <div class="row">
+                @foreach (var survey in _closedSurveys)
+                {
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card h-100 border-secondary">
+                            <div class="card-header bg-secondary text-white">
+                                <span class="badge bg-light text-secondary">Encerrada</span>
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">@survey.Title</h5>
+                                @if (!string.IsNullOrEmpty(survey.Description))
+                                {
+                                    <p class="card-text">@survey.Description</p>
+                                }
+                                <p class="text-muted small">
+                                    @survey.QuestionCount perguntas |
+                                    @survey.ResponseCount respostas
+                                </p>
+                            </div>
+                            <div class="card-footer">
+                                <a href="/surveys/@survey.Id/results" class="btn btn-outline-secondary btn-sm">Ver Resultados</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+}
+
+@if (!string.IsNullOrEmpty(_message))
+{
+    <div class="alert @(_messageType) alert-dismissible fade show mt-3" role="alert">
+        @_message
+        <button type="button" class="btn-close" @onclick="() => _message = null"></button>
+    </div>
+}
+
+@code {
+    private IEnumerable<SurveyResponse> _activeSurveys = [];
+    private IEnumerable<SurveyResponse> _draftSurveys = [];
+    private IEnumerable<SurveyResponse> _closedSurveys = [];
+    private bool _loading = true;
+    private string _activeTab = "active";
+    private bool _activating;
+    private Guid? _activatingId;
+    private string? _message;
+    private string _messageType = "alert-info";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSurveys();
+    }
+
+    private async Task LoadSurveys()
+    {
+        _loading = true;
+
+        var result = await SurveyService.GetSurveysAsync(1, 100);
+        if (result != null)
+        {
+            var allSurveys = result.Items.ToList();
+            _activeSurveys = allSurveys.Where(s => s.Status == SurveyStatus.Active);
+            _draftSurveys = allSurveys.Where(s => s.Status == SurveyStatus.Draft);
+            _closedSurveys = allSurveys.Where(s => s.Status == SurveyStatus.Closed);
+        }
+
+        _loading = false;
+    }
+
+    private void ChangeTab(string tab)
+    {
+        _activeTab = tab;
+    }
+
+    private async Task ActivateSurvey(Guid surveyId)
+    {
+        _activating = true;
+        _activatingId = surveyId;
+
+        var result = await SurveyService.ActivateSurveyAsync(surveyId, new ActivateSurveyRequest(null, null));
+
+        if (result != null)
+        {
+            _message = "Pesquisa ativada com sucesso!";
+            _messageType = "alert-success";
+            await LoadSurveys();
+            _activeTab = "active";
+        }
+        else
+        {
+            _message = "Erro ao ativar pesquisa.";
+            _messageType = "alert-danger";
+        }
+
+        _activating = false;
+        _activatingId = null;
+    }
+
+    private async Task DeleteSurvey(Guid surveyId)
+    {
+        var success = await SurveyService.DeleteSurveyAsync(surveyId);
+
+        if (success)
+        {
+            _message = "Pesquisa excluída com sucesso!";
+            _messageType = "alert-success";
+            await LoadSurveys();
+        }
+        else
+        {
+            _message = "Erro ao excluir pesquisa.";
+            _messageType = "alert-danger";
+        }
+    }
+
+    private async Task CloseSurvey(Guid surveyId)
+    {
+        var result = await SurveyService.CloseSurveyAsync(surveyId);
+
+        if (result != null)
+        {
+            _message = "Pesquisa encerrada com sucesso!";
+            _messageType = "alert-success";
+            await LoadSurveys();
+            _activeTab = "closed";
+        }
+        else
+        {
+            _message = "Erro ao encerrar pesquisa.";
+            _messageType = "alert-danger";
+        }
+    }
+}

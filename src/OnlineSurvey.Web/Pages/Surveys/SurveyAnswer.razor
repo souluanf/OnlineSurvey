@@ -1,0 +1,141 @@
+@page "/surveys/{SurveyId:guid}"
+@using OnlineSurvey.Web.Models
+@using OnlineSurvey.Web.Services
+@inject ISurveyApiService SurveyService
+@inject NavigationManager Navigation
+
+<PageTitle>Responder Pesquisa</PageTitle>
+
+@if (_loading)
+{
+    <p><em>Carregando pesquisa...</em></p>
+}
+else if (_survey is null)
+{
+    <div class="alert alert-danger">Pesquisa não encontrada.</div>
+}
+else if (_submitted)
+{
+    <div class="alert alert-success">
+        <h4>Obrigado por participar!</h4>
+        <p>Sua resposta foi registrada com sucesso.</p>
+        <a href="/surveys/@SurveyId/results" class="btn btn-primary">Ver Resultados</a>
+        <a href="/surveys" class="btn btn-outline-secondary">Voltar às Pesquisas</a>
+    </div>
+}
+else
+{
+    <h1>@_survey.Title</h1>
+    @if (!string.IsNullOrEmpty(_survey.Description))
+    {
+        <p class="lead">@_survey.Description</p>
+    }
+
+    <EditForm Model="_answers" OnValidSubmit="HandleSubmit">
+        @foreach (var question in _survey.Questions.OrderBy(q => q.Order))
+        {
+            <div class="card mb-3">
+                <div class="card-header">
+                    <strong>@(question.Order). @question.Text</strong>
+                    @if (question.IsRequired)
+                    {
+                        <span class="text-danger">*</span>
+                    }
+                </div>
+                <div class="card-body">
+                    @foreach (var option in question.Options.OrderBy(o => o.Order))
+                    {
+                        <div class="form-check">
+                            <input class="form-check-input"
+                                   type="radio"
+                                   name="@question.Id"
+                                   id="@option.Id"
+                                   value="@option.Id"
+                                   @onchange="() => SelectOption(question.Id, option.Id)" />
+                            <label class="form-check-label" for="@option.Id">
+                                @option.Text
+                            </label>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(_error))
+        {
+            <div class="alert alert-danger">@_error</div>
+        }
+
+        <button type="submit" class="btn btn-primary btn-lg" disabled="@_submitting">
+            @if (_submitting)
+            {
+                <span class="spinner-border spinner-border-sm" role="status"></span>
+                <span>Enviando...</span>
+            }
+            else
+            {
+                <span>Enviar Respostas</span>
+            }
+        </button>
+    </EditForm>
+}
+
+@code {
+    [Parameter]
+    public Guid SurveyId { get; set; }
+
+    private SurveyDetailResponse? _survey;
+    private readonly Dictionary<Guid, Guid> _answers = new();
+    private bool _loading = true;
+    private bool _submitting;
+    private bool _submitted;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _survey = await SurveyService.GetSurveyByIdAsync(SurveyId);
+        _loading = false;
+    }
+
+    private void SelectOption(Guid questionId, Guid optionId)
+    {
+        _answers[questionId] = optionId;
+    }
+
+    private async Task HandleSubmit()
+    {
+        _error = null;
+
+        if (_survey is null) return;
+
+        var unansweredRequired = _survey.Questions
+            .FirstOrDefault(q => q.IsRequired && !_answers.ContainsKey(q.Id));
+
+        if (unansweredRequired is not null)
+        {
+            _error = $"Por favor, responda a pergunta: {unansweredRequired.Text}";
+            return;
+        }
+
+        _submitting = true;
+
+        var request = new SubmitResponseRequest(
+            SurveyId,
+            null,
+            _answers.Select(a => new AnswerRequest(a.Key, a.Value)).ToList()
+        );
+
+        var success = await SurveyService.SubmitResponseAsync(request);
+
+        if (success)
+        {
+            _submitted = true;
+        }
+        else
+        {
+            _error = "Erro ao enviar resposta. Tente novamente.";
+        }
+
+        _submitting = false;
+    }
+}

@@ -1,0 +1,254 @@
+@page "/surveys/create"
+@using OnlineSurvey.Web.Models
+@using OnlineSurvey.Web.Services
+@inject ISurveyApiService SurveyService
+@inject NavigationManager Navigation
+
+<PageTitle>Criar Nova Pesquisa</PageTitle>
+
+<h1>Criar Nova Pesquisa</h1>
+
+@if (!string.IsNullOrEmpty(_errorMessage))
+{
+    <div class="alert alert-danger">@_errorMessage</div>
+}
+
+@if (_created)
+{
+    <div class="alert alert-success">
+        <h4>Pesquisa criada com sucesso!</h4>
+        <p>A pesquisa "<strong>@_title</strong>" foi criada como rascunho.</p>
+        <div class="mt-3">
+            <button class="btn btn-primary me-2" @onclick="ActivateAndGo">Ativar Pesquisa</button>
+            <a href="/surveys" class="btn btn-outline-secondary">Voltar para Lista</a>
+        </div>
+    </div>
+}
+else
+{
+    <EditForm Model="this" OnValidSubmit="HandleSubmit">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Informações da Pesquisa</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Título *</label>
+                    <input type="text" class="form-control" @bind="_title" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Descrição</label>
+                    <textarea class="form-control" @bind="_description" rows="3"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Perguntas</h5>
+                <button type="button" class="btn btn-sm btn-success" @onclick="AddQuestion">
+                    + Adicionar Pergunta
+                </button>
+            </div>
+            <div class="card-body">
+                @if (!_questions.Any())
+                {
+                    <div class="alert alert-info">
+                        Adicione pelo menos uma pergunta à pesquisa.
+                    </div>
+                }
+                else
+                {
+                    @for (int q = 0; q < _questions.Count; q++)
+                    {
+                        var questionIndex = q;
+                        var question = _questions[questionIndex];
+
+                        <div class="card mb-3 border-primary">
+                            <div class="card-header bg-primary bg-opacity-10 d-flex justify-content-between align-items-center">
+                                <span><strong>Pergunta @(questionIndex + 1)</strong></span>
+                                <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => RemoveQuestion(questionIndex)">
+                                    Remover
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Texto da Pergunta *</label>
+                                    <input type="text" class="form-control" @bind="question.Text" required />
+                                </div>
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" class="form-check-input" @bind="question.IsRequired" id="required_@questionIndex" />
+                                    <label class="form-check-label" for="required_@questionIndex">Pergunta obrigatória</label>
+                                </div>
+
+                                <div class="mt-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <label class="form-label mb-0"><strong>Opções de Resposta</strong></label>
+                                        <button type="button" class="btn btn-sm btn-outline-success" @onclick="() => AddOption(questionIndex)">
+                                            + Adicionar Opção
+                                        </button>
+                                    </div>
+
+                                    @if (!question.Options.Any())
+                                    {
+                                        <div class="alert alert-warning py-2">
+                                            Adicione pelo menos 2 opções de resposta.
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        @for (int o = 0; o < question.Options.Count; o++)
+                                        {
+                                            var optionIndex = o;
+                                            var option = question.Options[optionIndex];
+
+                                            <div class="input-group mb-2">
+                                                <span class="input-group-text">@((char)('A' + optionIndex))</span>
+                                                <input type="text" class="form-control" @bind="option.Text" placeholder="Texto da opção" required />
+                                                <button type="button" class="btn btn-outline-danger" @onclick="() => RemoveOption(questionIndex, optionIndex)" disabled="@(question.Options.Count <= 2)">
+                                                    X
+                                                </button>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary" disabled="@(_saving || !IsValid())">
+                @if (_saving)
+                {
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                }
+                Criar Pesquisa
+            </button>
+            <a href="/surveys" class="btn btn-outline-secondary">Cancelar</a>
+        </div>
+    </EditForm>
+}
+
+@code {
+    private string _title = "";
+    private string? _description;
+    private readonly List<QuestionModel> _questions = [];
+    private bool _saving;
+    private bool _created;
+    private string? _errorMessage;
+    private Guid _createdSurveyId;
+
+    protected override void OnInitialized()
+    {
+        // Start with one question with two options
+        AddQuestion();
+    }
+
+    private void AddQuestion()
+    {
+        var question = new QuestionModel
+        {
+            Text = "",
+            IsRequired = true,
+            Options = [new OptionModel { Text = "" }, new OptionModel { Text = "" }]
+        };
+        _questions.Add(question);
+    }
+
+    private void RemoveQuestion(int index)
+    {
+        _questions.RemoveAt(index);
+    }
+
+    private void AddOption(int questionIndex)
+    {
+        _questions[questionIndex].Options.Add(new OptionModel { Text = "" });
+    }
+
+    private void RemoveOption(int questionIndex, int optionIndex)
+    {
+        if (_questions[questionIndex].Options.Count > 2)
+        {
+            _questions[questionIndex].Options.RemoveAt(optionIndex);
+        }
+    }
+
+    private bool IsValid()
+    {
+        if (string.IsNullOrWhiteSpace(_title)) return false;
+        if (!_questions.Any()) return false;
+
+        foreach (var question in _questions)
+        {
+            if (string.IsNullOrWhiteSpace(question.Text)) return false;
+            if (question.Options.Count < 2) return false;
+            if (question.Options.Any(o => string.IsNullOrWhiteSpace(o.Text))) return false;
+        }
+
+        return true;
+    }
+
+    private async Task HandleSubmit()
+    {
+        _saving = true;
+        _errorMessage = null;
+
+        try
+        {
+            var request = new CreateSurveyRequest(
+                _title,
+                _description,
+                _questions.Select((q, qi) => new CreateQuestionRequest(
+                    q.Text,
+                    qi + 1,
+                    q.IsRequired,
+                    q.Options.Select((o, oi) => new CreateOptionRequest(o.Text, oi + 1)).ToList()
+                )).ToList()
+            );
+
+            var result = await SurveyService.CreateSurveyAsync(request);
+
+            if (result != null)
+            {
+                _createdSurveyId = result.Id;
+                _created = true;
+            }
+            else
+            {
+                _errorMessage = "Erro ao criar pesquisa. Verifique os dados e tente novamente.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Erro: {ex.Message}";
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task ActivateAndGo()
+    {
+        var result = await SurveyService.ActivateSurveyAsync(_createdSurveyId, new ActivateSurveyRequest(null, null));
+        if (result != null)
+        {
+            Navigation.NavigateTo($"/surveys/{_createdSurveyId}");
+        }
+    }
+
+    private sealed class QuestionModel
+    {
+        public string Text { get; set; } = "";
+        public bool IsRequired { get; set; } = true;
+        public List<OptionModel> Options { get; set; } = [];
+    }
+
+    private sealed class OptionModel
+    {
+        public string Text { get; set; } = "";
+    }
+}

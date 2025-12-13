@@ -1,0 +1,216 @@
+@page "/surveys/{Id:guid}/edit"
+@using OnlineSurvey.Web.Models
+@using OnlineSurvey.Web.Services
+@inject ISurveyApiService SurveyService
+@inject NavigationManager Navigation
+
+<PageTitle>Editar Pesquisa</PageTitle>
+
+@if (_loading)
+{
+    <p><em>Carregando...</em></p>
+}
+else if (_survey == null)
+{
+    <div class="alert alert-danger">
+        Pesquisa não encontrada.
+    </div>
+    <a href="/surveys" class="btn btn-secondary">Voltar</a>
+}
+else if (_survey.Status != SurveyStatus.Draft)
+{
+    <div class="alert alert-warning">
+        <h4>Pesquisa não pode ser editada</h4>
+        <p>Apenas pesquisas em rascunho podem ser editadas. Esta pesquisa está com status: <strong>@GetStatusName(_survey.Status)</strong></p>
+    </div>
+    <a href="/surveys" class="btn btn-secondary">Voltar para Lista</a>
+}
+else
+{
+    <h1>Editar Pesquisa</h1>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <div class="alert alert-danger">@_errorMessage</div>
+    }
+
+    @if (_saved)
+    {
+        <div class="alert alert-success">
+            Pesquisa atualizada com sucesso!
+        </div>
+    }
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Informações da Pesquisa</h5>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label class="form-label">Título *</label>
+                <input type="text" class="form-control" @bind="_title" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Descrição</label>
+                <textarea class="form-control" @bind="_description" rows="3"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Perguntas</h5>
+        </div>
+        <div class="card-body">
+            @if (!_survey.Questions.Any())
+            {
+                <div class="alert alert-warning">
+                    Esta pesquisa não tem perguntas.
+                </div>
+            }
+            else
+            {
+                @foreach (var question in _survey.Questions.OrderBy(q => q.Order))
+                {
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <strong>Pergunta @question.Order</strong>
+                            @if (question.IsRequired)
+                            {
+                                <span class="badge bg-danger ms-2">Obrigatória</span>
+                            }
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-2"><strong>@question.Text</strong></p>
+                            <ul class="list-unstyled mb-0">
+                                @foreach (var option in question.Options.OrderBy(o => o.Order))
+                                {
+                                    <li class="mb-1">
+                                        <span class="badge bg-secondary me-2">@((char)('A' + option.Order - 1))</span>
+                                        @option.Text
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                }
+            }
+            <div class="alert alert-info mt-3">
+                <small>Para editar perguntas e opções, exclua a pesquisa e crie uma nova.</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 mb-4">
+        <button class="btn btn-primary" @onclick="SaveChanges" disabled="@(_saving || string.IsNullOrWhiteSpace(_title))">
+            @if (_saving)
+            {
+                <span class="spinner-border spinner-border-sm me-2"></span>
+            }
+            Salvar Alterações
+        </button>
+        <button class="btn btn-success" @onclick="ActivateSurvey" disabled="@_saving">
+            Ativar Pesquisa
+        </button>
+        <a href="/surveys" class="btn btn-outline-secondary">Voltar</a>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private SurveyDetailResponse? _survey;
+    private string _title = "";
+    private string? _description;
+    private bool _loading = true;
+    private bool _saving;
+    private bool _saved;
+    private string? _errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSurvey();
+    }
+
+    private async Task LoadSurvey()
+    {
+        _loading = true;
+        _survey = await SurveyService.GetSurveyByIdAsync(Id);
+
+        if (_survey != null)
+        {
+            _title = _survey.Title;
+            _description = _survey.Description;
+        }
+
+        _loading = false;
+    }
+
+    private async Task SaveChanges()
+    {
+        _saving = true;
+        _saved = false;
+        _errorMessage = null;
+
+        try
+        {
+            var request = new UpdateSurveyRequest(_title, _description);
+            var result = await SurveyService.UpdateSurveyAsync(Id, request);
+
+            if (result != null)
+            {
+                _survey = result;
+                _saved = true;
+            }
+            else
+            {
+                _errorMessage = "Erro ao salvar alterações.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Erro: {ex.Message}";
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task ActivateSurvey()
+    {
+        _saving = true;
+        _errorMessage = null;
+
+        try
+        {
+            var result = await SurveyService.ActivateSurveyAsync(Id, new ActivateSurveyRequest(null, null));
+
+            if (result != null)
+            {
+                Navigation.NavigateTo("/surveys");
+            }
+            else
+            {
+                _errorMessage = "Erro ao ativar pesquisa.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Erro: {ex.Message}";
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private static string GetStatusName(SurveyStatus status) => status switch
+    {
+        SurveyStatus.Draft => "Rascunho",
+        SurveyStatus.Active => "Ativa",
+        SurveyStatus.Closed => "Encerrada",
+        _ => status.ToString()
+    };
+}
