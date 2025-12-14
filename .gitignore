@@ -1,0 +1,15 @@
+bin/
+obj/
+/packages/
+riderModule.iml
+/_ReSharper.Caches/
+
+# SonarQube
+sonar/.env.sonar
+sonar/reports/
+
+# Test Results
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
