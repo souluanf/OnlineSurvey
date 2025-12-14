@@ -1,0 +1,12 @@
+graph TB
+    subgraph piramide["Piramide de Testes"]
+        E2E["E2E Tests<br/>Playwright/Selenium"]
+        INT["Integration Tests<br/>WebApplicationFactory + InMemory DB"]
+        UNIT["Unit Tests<br/>xUnit + Moq"]
+    end
+
+    UNIT --> INT --> E2E
+
+    style E2E fill:#f9d5d5,stroke:#c0392b
+    style INT fill:#d5e8f9,stroke:#2980b9
+    style UNIT fill:#d5f9d8,stroke:#27ae60

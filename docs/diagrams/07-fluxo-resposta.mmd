@@ -1,0 +1,19 @@
+sequenceDiagram
+    autonumber
+    participant R as Respondente
+    participant API as ASP.NET Core API
+    participant Val as FluentValidation
+    participant EF as Entity Framework
+    participant DB as PostgreSQL
+
+    R->>API: POST /api/responses
+    API->>Val: Valida SubmitResponseRequest
+    Val-->>API: Validacao OK
+    API->>EF: Verifica pesquisa ativa
+    EF->>DB: SELECT Survey WHERE Id = ?
+    DB-->>EF: Survey (Status = Active)
+    API->>EF: responseService.SubmitResponseAsync()
+    EF->>DB: INSERT Response, Answers
+    DB-->>EF: Response criada
+    EF-->>API: ResponseConfirmation
+    API-->>R: 201 Created

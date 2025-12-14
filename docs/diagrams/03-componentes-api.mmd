@@ -1,0 +1,17 @@
+C4Component
+    Container_Boundary(api, "API REST - ASP.NET Core") {
+        Component(endpoints, "Endpoints", "Minimal APIs", "Define rotas HTTP e handlers")
+        Component(services, "Services", "Application Layer", "Logica de negocio e orquestracao")
+        Component(validators, "Validators", "FluentValidation", "Validacao de entrada de dados")
+        Component(repositories, "Repositories", "Repository Pattern", "Abstracao de acesso a dados")
+        Component(efcore, "DbContext", "Entity Framework Core", "ORM e mapeamento objeto-relacional")
+        Component(middleware, "Middlewares", "ASP.NET Core", "Tratamento de excecoes, logging")
+    }
+
+    ContainerDb(db, "PostgreSQL", "Database")
+
+    Rel(endpoints, validators, "Valida requests")
+    Rel(endpoints, services, "Invoca logica de negocio")
+    Rel(services, repositories, "Acessa dados via")
+    Rel(repositories, efcore, "Usa")
+    Rel(efcore, db, "SQL Queries")

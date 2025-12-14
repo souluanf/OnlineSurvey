@@ -1,0 +1,19 @@
+sequenceDiagram
+    autonumber
+    participant Admin as Administrador
+    participant Web as Blazor WASM
+    participant API as ASP.NET Core API
+    participant Val as FluentValidation
+    participant EF as Entity Framework
+    participant DB as PostgreSQL
+
+    Admin->>Web: Preenche formulario de pesquisa
+    Web->>API: POST /api/surveys
+    API->>Val: Valida CreateSurveyRequest
+    Val-->>API: Validacao OK
+    API->>EF: surveyService.CreateSurveyAsync()
+    EF->>DB: INSERT Survey, Questions, Options
+    DB-->>EF: Entidades criadas
+    EF-->>API: SurveyDetailResponse
+    API-->>Web: 201 Created + JSON
+    Web-->>Admin: Exibe pesquisa criada

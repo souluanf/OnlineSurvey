@@ -1,0 +1,13 @@
+C4Context
+    Person(respondente, "Respondente", "Pessoa que responde as pesquisas atraves de links em redes sociais")
+    Person(admin, "Administrador", "Usuario que cria pesquisas e visualiza resultados")
+
+    System(sistema, "Sistema de Questionarios Online", "Permite criar pesquisas, coletar respostas em escala e visualizar resultados sumarizados")
+
+    System_Ext(redes, "Redes Sociais", "Facebook, Instagram, Twitter - divulgacao das pesquisas")
+    System_Ext(cdn, "CDN", "Distribuicao de conteudo estatico")
+
+    Rel(respondente, sistema, "Responde pesquisas", "HTTP")
+    Rel(admin, sistema, "Gerencia pesquisas e visualiza resultados", "HTTP")
+    Rel(sistema, redes, "Links compartilhados")
+    Rel(cdn, respondente, "Entrega conteudo estatico")

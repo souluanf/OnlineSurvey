@@ -1,0 +1,14 @@
+C4Container
+    Person(respondente, "Respondente", "Milhoes de pessoas respondendo pesquisas")
+    Person(admin, "Administrador", "Equipe que gerencia pesquisas")
+
+    Container_Boundary(sistema, "Sistema de Questionarios Online") {
+        Container(web, "Aplicacao Web", "Blazor WebAssembly", "Interface do usuario para criacao de pesquisas e visualizacao de resultados")
+        Container(api, "API REST", "ASP.NET Core Minimal APIs", "Endpoints para gerenciar pesquisas e coletar respostas")
+        ContainerDb(db, "Banco de Dados", "PostgreSQL", "Armazena pesquisas, perguntas, opcoes e respostas")
+    }
+
+    Rel(respondente, api, "Envia respostas", "HTTP/JSON")
+    Rel(admin, web, "Acessa interface", "HTTP")
+    Rel(web, api, "Consome API", "HTTP/JSON")
+    Rel(api, db, "Le/Escreve dados", "TCP/SQL")

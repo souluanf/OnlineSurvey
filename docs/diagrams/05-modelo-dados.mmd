@@ -1,0 +1,45 @@
+erDiagram
+    SURVEY ||--o{ QUESTION : contains
+    QUESTION ||--o{ OPTION : has
+    SURVEY ||--o{ RESPONSE : receives
+    RESPONSE ||--o{ ANSWER : contains
+    ANSWER }o--|| OPTION : selects
+
+    SURVEY {
+        guid Id PK
+        string Title
+        string Description
+        enum Status
+        datetime StartDate
+        datetime EndDate
+        datetime CreatedAt
+    }
+
+    QUESTION {
+        guid Id PK
+        guid SurveyId FK
+        string Text
+        int Order
+        bool IsRequired
+    }
+
+    OPTION {
+        guid Id PK
+        guid QuestionId FK
+        string Text
+        int Order
+    }
+
+    RESPONSE {
+        guid Id PK
+        guid SurveyId FK
+        datetime SubmittedAt
+        string IpAddress
+    }
+
+    ANSWER {
+        guid Id PK
+        guid ResponseId FK
+        guid QuestionId FK
+        guid SelectedOptionId FK
+    }

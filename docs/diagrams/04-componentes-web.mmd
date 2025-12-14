@@ -1,0 +1,14 @@
+C4Component
+    Container_Boundary(web, "Blazor WebAssembly") {
+        Component(pages, "Pages", "Razor Components", "Paginas da aplicacao (Home, Lista, Criar, Resultados)")
+        Component(components, "Components", "Razor Components", "Componentes reutilizaveis (Forms, Charts, Tabs)")
+        Component(services_web, "API Services", "HttpClient", "Comunicacao com a API REST")
+        Component(state, "State Management", "Blazor State", "Gerenciamento de estado da aplicacao")
+    }
+
+    Container(api, "API REST", "ASP.NET Core")
+
+    Rel(pages, components, "Usa")
+    Rel(pages, services_web, "Consome dados via")
+    Rel(pages, state, "Le/Atualiza estado")
+    Rel(services_web, api, "HTTP/JSON")

@@ -1,0 +1,11 @@
+C4Deployment
+    Deployment_Node(docker, "Docker Host", "Linux/Docker") {
+        Deployment_Node(network, "onlinesurvey-network", "Bridge Network") {
+            Container(web_container, "web", "nginx:alpine", "Serve Blazor WASM, proxy reverso para API")
+            Container(api_container, "api", "ASP.NET Core 10", "API REST containerizada")
+            ContainerDb(db_container, "db", "PostgreSQL 16", "Banco de dados persistente")
+        }
+    }
+
+    Rel(web_container, api_container, "Proxy /api/*", "HTTP:8080")
+    Rel(api_container, db_container, "Conexao DB", "TCP:5432")
