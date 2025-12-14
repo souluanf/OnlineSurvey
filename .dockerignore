@@ -1,0 +1,57 @@
+﻿# Git
+**/.git
+**/.gitignore
+**/.gitattributes
+
+# IDE/Editor
+**/.vs
+**/.vscode
+**/.idea
+**/.claude
+**/.project
+**/.settings
+**/.toolstarget
+**/*.*proj.user
+
+# Build outputs
+**/bin
+**/obj
+**/out
+**/publish
+
+# Environment and secrets
+**/.env
+**/.env.*
+**/appsettings.local.json
+**/secrets.dev.yaml
+**/values.dev.yaml
+**/*.pem
+**/*.key
+**/*.crt
+**/*.pfx
+
+# Docker
+**/.dockerignore
+**/docker-compose*
+**/compose.yaml
+**/Dockerfile*
+
+# Tests and documentation
+**/tests
+**/docs
+**/sonar
+**/historia
+README.md
+LICENSE
+CHANGELOG.md
+
+# Node
+**/node_modules
+**/npm-debug.log
+
+# Misc
+**/*.dbmdl
+**/*.jfm
+**/azds.yaml
+**/charts
+*.md
