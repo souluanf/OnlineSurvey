@@ -4,6 +4,19 @@
 
 Sistema de Questionários Online para pesquisas públicas em larga escala, desenvolvido com .NET 10.
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=souluanf_OnlineSurvey&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=souluanf_OnlineSurvey)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=souluanf_OnlineSurvey&metric=coverage)](https://sonarcloud.io/summary/new_code?id=souluanf_OnlineSurvey)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=souluanf_OnlineSurvey&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=souluanf_OnlineSurvey)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=souluanf_OnlineSurvey&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=souluanf_OnlineSurvey)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=souluanf_OnlineSurvey&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=souluanf_OnlineSurvey)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=souluanf_OnlineSurvey&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=souluanf_OnlineSurvey)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=souluanf_OnlineSurvey&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=souluanf_OnlineSurvey)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=souluanf_OnlineSurvey&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=souluanf_OnlineSurvey)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=souluanf_OnlineSurvey&metric=bugs)](https://sonarcloud.io/summary/new_code?id=souluanf_OnlineSurvey)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=souluanf_OnlineSurvey&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=souluanf_OnlineSurvey)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=souluanf_OnlineSurvey&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=souluanf_OnlineSurvey)
+
+
 ## Pré-requisitos
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
